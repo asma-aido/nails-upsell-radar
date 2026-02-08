@@ -1,19 +1,9 @@
 import random
 from datetime import datetime, timedelta
-
 import pandas as pd
 import streamlit as st
 
-
-# =============================
-# Nails Upsell Radar (MVP)
-# =============================
-# الفكرة: مو كل موعد مناسب نضيف له خدمة.
-# نبي نطلع "فرص upsell" الطبيعية اللي ما تضغط الجدول ولا تحسّس العميل إنه مجبور.
-# هذا كله نموذج أولي — الهدف نفهم وين الفرص، مو نطلع أرقام مثالية.
-
-
-# بيانات تجريبية فقط لتجربة الفكرة (مو تمثيل دقيق للواقع)
+# بيانات تجريبية فقط لتجربة الفكرة 
 NAIL_SERVICES = [
     ("Manicure", 45, [70, 90, 110]),
     ("Pedicure", 60, [90, 120, 150]),
@@ -25,7 +15,7 @@ NAIL_SERVICES = [
 
 TECHS = ["Asma", "Hessa", "Aisha", "Razan"]
 
-# قائمة إضافات (تقدر تغيّرها حسب واقع الصالون)
+# قائمة إضافات
 UPSELL_MENU = [
     {"name": "Nail Art (خفيف)", "minutes": 15, "price": 40},
     {"name": "Gel Upgrade", "minutes": 10, "price": 30},
@@ -33,15 +23,9 @@ UPSELL_MENU = [
     {"name": "Paraffin / Hand Care", "minutes": 20, "price": 55},
 ]
 
-
 def generate_bookings(n: int = 25, seed: int = 9) -> pd.DataFrame:
-    """
-    توليد مواعيد تجريبية لليوم.
-    مهم: seed يخليك تعيد نفس السيناريو وقت ما تبغى (مفيد للديمو والتجربة).
-    """
     random.seed(seed)
     now = datetime.now().replace(minute=0, second=0, microsecond=0)
-
     rows = []
     for i in range(n):
         hours_until = random.randint(1, 12)
@@ -50,7 +34,7 @@ def generate_bookings(n: int = 25, seed: int = 9) -> pd.DataFrame:
         service, duration_min, price_choices = random.choice(NAIL_SERVICES)
         price = random.choice(price_choices)
 
-        # مجرد إشارة (عميل جديد/قديم) — ما نستخدمها بقوة الآن
+        # مجرد إشارة (عميل جديد/قديم)
         visits_count = random.randint(0, 12)
 
         rows.append(
@@ -66,10 +50,9 @@ def generate_bookings(n: int = 25, seed: int = 9) -> pd.DataFrame:
         )
 
     df = pd.DataFrame(rows)
-    # نرتب حسب الفنية والوقت عشان نعرف الفجوات بشكل منطقي
+    #نرتب حسب الفنية والوقت عشان نعرف الفجوات
     df = df.sort_values(["tech", "start_time"]).reset_index(drop=True)
     return df
-
 
 def compute_gaps_by_tech(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -101,9 +84,8 @@ def compute_gaps_by_tech(df: pd.DataFrame) -> pd.DataFrame:
 
 def pick_best_addon(gap_after_min: int | None):
     """
-    نختار إضافة تناسب الوقت المتاح.
-    المنطق هنا بسيط جدًا: إذا أكثر من خيار يناسب الوقت، نأخذ الأعلى سعرًا.
-    (تقدر تغيرها لاحقًا حسب هامش الربح أو تفضيلات الصالون)
+    نختار إضافة تناسب الوقت المتاح
+    المنطق هنا هو إذا أكثر من خيار يناسب الوقت، نأخذ الأعلى سعرا
     """
     if gap_after_min is None:
         return None
@@ -129,7 +111,6 @@ def upsell_candidate(row, avg_price: float, min_gap: int):
     if gap is None or gap < min_gap:
         return None
 
-    # هذه إشارات بسيطة (قابلة للتعديل)
     low_price = row["price"] < avg_price
     short_session = row["duration_min"] <= 60  # الجلسات القصيرة غالبًا تقبل إضافة بسيطة
 
@@ -274,7 +255,7 @@ with tabs[1]:
 
     st.markdown(
         """
-**وش يعتمد عليه الاقتراح؟**
+**ايش يعتمد عليه الاقتراح؟**
 - وجود وقت فاضي بعد الموعد (gap) على نفس الفنية
 - سعر الموعد مقارنة بمتوسط اليوم
 - مدة الموعد (الجلسات القصيرة غالبًا تقبل إضافة بسيطة)
@@ -307,7 +288,7 @@ with tabs[1]:
     )
 
     st.write(
-        "لو صار عندي وقت أكثر، بسجل: هل العميل قبل الإضافة أو لا، وهل أثرت على رضا العميل أو على الجدول."
+        "مستقبلا، بسجل: هل العميل قبل الإضافة أو لا، وهل أثرت على رضا العميل أو على الجدول."
     )
 
 
